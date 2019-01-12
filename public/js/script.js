@@ -23,6 +23,48 @@ function getPageModule(parentElement, moduleUrl) {
     })
 }
 
+function renderLoginPanel() {
+  document.getElementById('left-panel').innerHTML = getTemplate('login-form');
+}
+
+function renderUserPanel() {
+  document.getElementById('left-panel').innerHTML = getTemplate('user-panel').replace('##user##', sessionStorage.getItem('username'));
+}
+
+function handleLogin(event) {
+  event.preventDefault();
+  fetch('/login', {
+    method: 'POST',
+    headers: {
+      "Content-Type": 'application/json'
+    },
+    body: JSON.stringify({
+      username: event.target.elements['username'].value,
+      password: event.target.elements['password'].value
+    })
+  })
+  .then(function (res) {
+    return res.json();
+  })
+  .then(function (resjson) {
+    if (resjson.success) {
+      sessionStorage.setItem('username', resjson['username']);
+      sessionStorage.setItem('access_token', resjson['access_token']);
+      location.reload();
+    }
+    else {
+      window.alert('Username or password incorrect.');
+    }
+  });
+
+  return false;
+}
+
+function handleLogout() {
+  sessionStorage.clear();
+  location.reload();
+}
+
 function renderComposer(args, display) {
   function renderTable() {
     var rows = 12;

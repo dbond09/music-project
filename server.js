@@ -27,5 +27,17 @@ app.post('/posts', function(req, res) {
   console.log(post);
 });
 
+app.post('/login', function(req, res) {
+  var data = req.body;
+  console.log(req.body);
+
+  if (data.username == 'admin' && data.password == '1234') {
+    res.send({success: true, access_token: 'asdasdasd', username: 'admin'});
+  }
+  else {
+    res.send({success: false});
+  }
+
+});
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
