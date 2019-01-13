@@ -1,3 +1,7 @@
+.panel-heading {
+	margin-top: 0;
+}
+
 .nav-pills-custom>li>a {
 	color: white;
 }

@@ -33,7 +33,7 @@ function renderUserPanel() {
 
 function handleLogin(event) {
   event.preventDefault();
-  fetch('/login', {
+  window.fetch('/login', {
     method: 'POST',
     headers: {
       "Content-Type": 'application/json'
@@ -63,6 +63,30 @@ function handleLogin(event) {
 function handleLogout() {
   sessionStorage.clear();
   location.reload();
+}
+
+function handleRegister(event) {
+  event.preventDefault();
+  var fields = event.target.elements;
+  window.fetch('/register', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      username: fields.username.value,
+      password: fields.password.value,
+      forename: fields.forename.value,
+      surname: fields.surname.value
+    })
+  })
+    .then(function (res) {
+      return res.json()
+    })
+    .then(function (resjson) {
+      window.alert('success');
+      location.reload();
+    });
+
+  return false;
 }
 
 function renderComposer(args, display) {
@@ -240,14 +264,20 @@ function getSamplers() {
 }
 
 function play(event, newpost) {
-  console.log('he');
+  var current = -1;
+
   if (newpost) {
     var post = MUSICAPPSTATE.newPost;
+    var styletemplate = '.composer-table td:nth-child(##n##) {border-right: solid red !important}';
   }
   else {
     var id = parseInt(event.target.id.replace('post-', ''));
     var post = MUSICAPPSTATE.posts[id];
+    var styletemplate = '#post-' + id + ' td:nth-child(##n##) {border-right: solid red !important}';
   }
+  var style = document.createElement('style');
+  style.setAttribute('id', 'play-indicator');
+  document.getElementsByTagName('body')[0].appendChild(style);
 
   Tone.Transport.cancel();
   var synth = new Tone.Synth().toMaster()
@@ -256,6 +286,8 @@ function play(event, newpost) {
   Tone.Transport.scheduleRepeat((time)=> {
     // console.log(this.state.current);
     // this.setState({current: (this.state.current+1)%16});
+    current = (current+1) % 16;
+    style.innerHTML = styletemplate.replace('##n##', current+(newpost ? 1 : 0));
   }, '4n');
 
   var chord = new Tone.Event(function(time, chord){
@@ -287,6 +319,8 @@ function play(event, newpost) {
 
 function stop() {
   Tone.Transport.cancel();
+  var indicator = document.getElementById('play-indicator');
+  indicator.parentNode.removeChild(indicator);
 }
 
 function loadPosts() {
@@ -299,4 +333,35 @@ function loadPosts() {
       }
     )
     .then(()=>renderPosts());
+}
+
+function loadPeoplePage() {
+  window.fetch('/people')
+    .then((res)=>res.json())
+    .then(function (res) {
+      var table = document.createElement('table');
+      table.setAttribute('class', 'table');
+      var thead = document.createElement('thead');
+      thead.innerHTML = '<tr><th>Username</th><th>Forename</th><th>Surname</th></tr>';
+      table.appendChild(thead);
+      var tbody = document.createElement('tbody');
+      table.appendChild(tbody);
+      for (var username of Object.keys(res)) {
+        var row = document.createElement('tr');
+        tbody.appendChild(row);
+        for (var key of ['username', 'forename', 'surname']) {
+          var td = document.createElement('td');
+          td.innerHTML = res[username][key];
+          row.appendChild(td);
+        }
+      }
+
+      var midcol = document.getElementById('middle-column');
+      midcol.innerHTML = getTemplate('people-panel');
+      midcol.children[0].children[1].appendChild(table);
+    });
+}
+
+function loadRegisterPage() {
+  document.getElementById('middle-column').innerHTML = getTemplate('registration-panel');
 }

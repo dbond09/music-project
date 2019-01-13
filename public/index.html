@@ -27,10 +27,10 @@
       <div class="navbar-collapse navbar-collapse-1 collapse" aria-expanded="true">
         <ul class="nav navbar-nav">
           <li class="active">
-            <a href="#"><span class="glyphicon glyphicon-home"></span> Home</a>
+            <a href="#" onclick="loadHome()"><span class="glyphicon glyphicon-home"></span> Home</a>
           </li>
           <li>
-            <a href="#"><span class="glyphicon glyphicon-user"></span> People</a>
+            <a href="#" onclick="loadPeoplePage()"><span class="glyphicon glyphicon-user"></span> People</a>
           </li>
         </ul>
           <div class="navbar-form navbar-right">
@@ -48,10 +48,6 @@
         </div>
       </div>
       <div class="col-sm-6" div id="middle-column">
-        <div id="new-post">
-        </div>
-        <div id="posts">
-        </div>
       </div>
     </div>
   </div>
@@ -131,7 +127,7 @@
           <label htmlFor="password">Password</label>
           <input type="password" class="form-control" name="password" placeholder="Password" />
         </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="submit" class="btn btn-primary">Submit</button><button type="button" class="btn btn-info" onclick="loadRegisterPage()">Register</button>
       </form>
     </div>
   </script>
@@ -145,17 +141,57 @@
       User: ##user##
     </div>
   </script>
+  <script type="text/template" id="people-panel">
+    <div class="panel panel-info">
+      <h3 class="panel-heading">People</h3>
+      <div class="panel-body">
+      </div>
+    </div>
+  </script>
+  <script type="text/template" id="registration-panel">
+    <div class="panel panel-info">
+      <h3 class="panel-heading">Registration</h3>
+      <div class="panel-body">
+        <form onSubmit="{handleRegister(event); return false;}" action="/register" method="post">
+          <div class="form-group">
+            <label htmlFor="username">Username</label>
+            <input type="text" class="form-control" name="username" aria-describedby="emailHelp" placeholder="Enter username" />
+          </div>
+          <div class="form-group">
+            <label htmlFor="password">Password</label>
+            <input type="password" class="form-control" name="password" placeholder="Password" />
+          </div>
+          <div class="form-group">
+            <label htmlFor="passwordconfirm">Confirm Password</label>
+            <input type="password" class="form-control" name="passwordconfirm" placeholder="Confirm Password" />
+          </div>
+          <div class="form-group">
+            <label htmlFor="Forename">Forename</label>
+            <input type="text" class="form-control" name="text" placeholder="Forename" />
+          </div>
+          <div class="form-group">
+            <label htmlFor="Surname">Surname</label>
+            <input type="text" class="form-control" name="text" placeholder="Surname" />
+          </div>
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+      </div>
+  </script>
 
   <script src="js/Tone.js"></script>
   <script src="js/script.js"></script>
   <script>
-    if (sessionStorage.getItem('username')) {
-      renderUserPanel();
-      renderNewPostModule();
+    function loadHome() {
+      document.getElementById('middle-column').innerHTML = '<div id="new-post"></div><div id="posts"></div>';
+      if (sessionStorage.getItem('username')) {
+        renderUserPanel();
+        renderNewPostModule();
+      }
+      else {renderLoginPanel()}
+      loadPosts();
+      getSamplers();
     }
-    else {renderLoginPanel()}
-    loadPosts();
-    getSamplers();
+    loadHome();
   </script>
 </body>
 
