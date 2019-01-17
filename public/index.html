@@ -34,9 +34,7 @@
           </li>
         </ul>
           <div class="navbar-form navbar-right">
-            <button class="btn btn-primary" type="submit" aria-label="Left Align" onClick="handleLogout()">
-              <span class="glyphicon glyphicon-log-out" aria-hidden="true"> </span> Log Out
-            </button>
+
           </div>
       </div>
     </div>
@@ -61,15 +59,17 @@
       <div class="panel-body">
         <div class="media">
           <div class="media-body">
-            <div class="form-group has-feedback">
+            <div class="form-group">
               <div id="new-post-composers">
               </div>
+              <span style="margin-right: 5px"><div class="infobutton leftbutton">BPM</div><input class="form-control num-input" size="3" type="number" value="##BPM##" onchange="handleBPMChange(event)"></input></span>
+              <span><div class="infobutton leftbutton">Measures</div><input class="form-control num-input" size="3" type="number" value="##measures##" onchange="handleMeasuresChange(event)"></input></span>
               <div style="margin-top: 5px">
                 <button type="button" class="btn btn-primary" onClick="handleNewPostSubmit()">Post</button>
-                <button type="button" class="btn btn-info" onClick="play(event, true)">Play</button>
-                <button type="button" class="btn btn-danger" onClick="stop()">Stop</button>
-                <button type="button" class="btn btn-info" onClick="addNewPostComposer()"><span class="glyphicon glyphicon-plus"></span></button>
-                <button type="button" class="btn btn-info" onClick="removeNewPostComposer()"><span class="glyphicon glyphicon-minus"></span></button>
+                <button type="button" class="btn btn-info leftbutton" onClick="play(event, true)"><span class="glyphicon glyphicon-play"></span></button>
+                <button type="button" class="btn btn-danger rightbutton" onClick="stop()"><span class="glyphicon glyphicon-stop"></span></button>
+                <button type="button" class="btn btn-info leftbutton" onClick="addNewPostComposer()"><span class="glyphicon glyphicon-plus"></span></button>
+                <button type="button" class="btn btn-danger rightbutton" onClick="removeNewPostComposer()"><span class="glyphicon glyphicon-minus"></span></button>
               </div>
             </div>
           </div>
@@ -80,20 +80,25 @@
   <script type="text/template" id="template-composer">
     <div class="composer-table-container">
       <form name="composer-##composerid##">
-        <span>Instrument:
-          <select id="instrument-##composerid##" data-composerid="##composerid##" onChange="handleComposerInstrumentChange(event)">
-            <option value="piano">Piano</option>
-            <option value="guitar">Guitar</option>
-            <option value="harmonium">Harmonium</option>
-            <option value="snare">Snare</option>
-          </select>
-        </span>
-        <span>Octave:
-          <input name="octave-##composerid##" data-composerid="##composerid##" type="radio" value="1" onChange="handleComposerOctaveChange(event)">1</input>
-          <input name="octave-##composerid##" data-composerid="##composerid##" type="radio" value="2" onChange="handleComposerOctaveChange(event)">2</input>
-          <input name="octave-##composerid##" data-composerid="##composerid##" type="radio" value="3" onChange="handleComposerOctaveChange(event)">3</input>
-          <input name="octave-##composerid##" data-composerid="##composerid##" type="radio" value="4" onChange="handleComposerOctaveChange(event)">4</input>
-          <input name="octave-##composerid##" data-composerid="##composerid##" type="radio" value="5" onChange="handleComposerOctaveChange(event)">5</input>
+        <span>
+        <div class="infobutton leftbutton">Instrument</div>
+        <div class="dropdown btn" style="padding-left:0">
+          <button class="dropdown-toggle btn btn-info rightbutton" type="button" data-toggle="dropdown">##instrument##<span class="caret"></span></button>
+            <ul id="instrument-##composerid##" class="dropdown-menu">
+              <li><a data-composerid="##composerid##" data-value="piano" class="dropdown-item" onclick="handleComposerInstrumentChange(event)">Piano</a></li>
+            </ul>
+        </div>
+        <div class="infobutton leftbutton">Octave</div>
+          <input id="octave-##composerid##-1" name="octave-##composerid##" class="octave-button" data-composerid="##composerid##" type="radio" value="1" onChange="handleComposerOctaveChange(event)"></input>
+          <label for="octave-##composerid##-1" class="btn btn-info middlebutton">1</label>
+          <input id="octave-##composerid##-2" name="octave-##composerid##" class="octave-button" data-composerid="##composerid##" type="radio" value="2" onChange="handleComposerOctaveChange(event)"></input>
+          <label for="octave-##composerid##-2" class="btn btn-info middlebutton">2</label>
+          <input id="octave-##composerid##-3" name="octave-##composerid##" class="octave-button" data-composerid="##composerid##" type="radio" value="3" onChange="handleComposerOctaveChange(event)"></input>
+          <label for="octave-##composerid##-3" class="btn btn-info middlebutton">3</label>
+          <input id="octave-##composerid##-4" name="octave-##composerid##" class="octave-button" data-composerid="##composerid##" type="radio" value="4" onChange="handleComposerOctaveChange(event)"></input>
+          <label for="octave-##composerid##-4" class="btn btn-info middlebutton">4</label>
+          <input id="octave-##composerid##-5" name="octave-##composerid##" class="octave-button" data-composerid="##composerid##" type="radio" value="5" onChange="handleComposerOctaveChange(event)"></input>
+          <label for="octave-##composerid##-5" class="btn btn-info rightbutton">5</label>
         </span>
       </form>
       ##table##
@@ -103,8 +108,8 @@
     <div class="panel panel-info">
       <div class="panel-heading">
         <div id="##id##" class="media" onMouseEnter="play(event)" onMouseLeave="stop()">
-          <div class="this.state.current >= 0 ? 'media-heading playing' : 'media-body'">
-            <h4 classe="media-heading">##author##</h4>
+            <h4 class="media-heading">##author##</h4>
+          <div class="panel-body">
             ##composers##
           </div>
         </div>
@@ -127,7 +132,7 @@
           <label htmlFor="password">Password</label>
           <input type="password" class="form-control" name="password" placeholder="Password" />
         </div>
-        <button type="submit" class="btn btn-primary">Submit</button><button type="button" class="btn btn-info" onclick="loadRegisterPage()">Register</button>
+        <button type="submit" class="btn btn-primary">Log In</button><button type="button" class="btn btn-info" onclick="loadRegisterPage()">Register</button>
       </form>
     </div>
   </script>
@@ -138,7 +143,10 @@
       </h3>
     </div>
     <div class="panel-body">
-      User: ##user##
+      <p>User: ##user##</p>
+      <button id="logout-button" class="btn btn-primary" type="submit" aria-label="Left Align" onClick="handleLogout()">
+        <span class="glyphicon glyphicon-log-out" aria-hidden="true"> </span> Log Out
+      </button>
     </div>
   </script>
   <script type="text/template" id="people-panel">
@@ -167,29 +175,34 @@
           </div>
           <div class="form-group">
             <label htmlFor="Forename">Forename</label>
-            <input type="text" class="form-control" name="text" placeholder="Forename" />
+            <input type="text" class="form-control" name="forename" placeholder="Forename" />
           </div>
           <div class="form-group">
             <label htmlFor="Surname">Surname</label>
-            <input type="text" class="form-control" name="text" placeholder="Surname" />
+            <input type="text" class="form-control" name="surname" placeholder="Surname" />
           </div>
           <button type="submit" class="btn btn-primary">Submit</button>
         </form>
       </div>
   </script>
 
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
   <script src="js/Tone.js"></script>
   <script src="js/script.js"></script>
   <script>
     function loadHome() {
       document.getElementById('middle-column').innerHTML = '<div id="new-post"></div><div id="posts"></div>';
       if (sessionStorage.getItem('username')) {
+        verifyAccessToken();
+        MUSICAPPSTATE.activeModules['userpanel'] = true;
+        MUSICAPPSTATE.activeModules['newpost'] = true;
         renderUserPanel();
         renderNewPostModule();
       }
       else {renderLoginPanel()}
       loadPosts();
-      getSamplers();
+      getSynths();
     }
     loadHome();
   </script>

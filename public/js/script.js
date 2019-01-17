@@ -1,12 +1,19 @@
 const INSTRUMENTS = ['piano', 'guitar', 'harmonium', 'snare'];
 const NOTES = ['B','A#','A','G#','G','F#','F','E','D#','D','C#','C'];
 
+
 var MUSICAPPSTATE = {
   newPost: {
-    composers: [{id: 0, notes: {}, instrument: 'piano', octave: 3, events: []}]
+    composers: [{id: 0, notes: {}, instrument: 'piano', octave: 3, events: [], measures: 4}],
+    measures: 4,
+    BPM: 200
   },
   posts: [],
-  samplers: []
+  samplers: {},
+  synths: {},
+  toload: 0,
+  measures: 4,
+  activeModules: {}
 };
 
 function getTemplate(id) {
@@ -29,6 +36,25 @@ function renderLoginPanel() {
 
 function renderUserPanel() {
   document.getElementById('left-panel').innerHTML = getTemplate('user-panel').replace('##user##', sessionStorage.getItem('username'));
+}
+
+function verifyAccessToken() {
+  window.fetch('/verify', {
+    method: 'POST',
+    headers: {
+      "Content-Type": 'application/json'
+    },
+    body: JSON.stringify({
+      'access_token': sessionStorage.getItem('access_token'),
+      'username': sessionStorage.getItem('username')
+    })
+  })
+  .then(function(res) {return res.json()})
+  .then(function(res) {
+    if (res.success !== true) {
+      handleLogout();
+    }
+  })
 }
 
 function handleLogin(event) {
@@ -62,6 +88,7 @@ function handleLogin(event) {
 
 function handleLogout() {
   sessionStorage.clear();
+  MUSICAPPSTATE.activeModules = {};
   location.reload();
 }
 
@@ -92,13 +119,14 @@ function handleRegister(event) {
 function renderComposer(args, display) {
   function renderTable() {
     var rows = 12;
-    var beats = 4;
-    var table = [];
+    var beats = args.measures || 4;
+    var table = '';
 
     if (display) {
-      table += ('<tr><td colSpan="16" style="height: 10px">'+ args.instrument +'</td></tr>');
+      table += ('<thead><tr><td colSpan="'+ beats*4 +'" style="height: 10px">'+ args.instrument +'</td></tr></thead>');
     }
 
+    table += '<tbody>';
     for (var i = 0; i < rows; i++) {
       var row = [];
       if (!display) {
@@ -106,14 +134,16 @@ function renderComposer(args, display) {
       }
       for (var j = 0; j < beats*4; j++) {
         if (display) {
-          row += ('<td class="' + (args.notes[i+','+j] ? 'dropzone active-cell' : 'dropzone') + '" data-index="'+i+','+j+'"></td>');
+          console.log(args.notes[i+','+j]);
+          row += ('<td class="' + (args.notes[i+','+j] ? 'active-cell q-' + args.notes[i+','+j] : '') + '" data-index="'+i+','+j+'"></td>');
         }
         else {
-          row += ('<td class="' + (args.notes[i+','+j] ? 'dropzone active-cell' : 'dropzone') + '" data-index="'+i+','+j+'" data-composerid="'+args.id+'" onClick="handleComposerCellClick(event)"></td>');
+          row += ('<td class="' + (args.notes[i+','+j] ? 'active-cell q-' + args.notes[i+','+j] : '') + '" data-index="'+i+','+j+'" data-composerid="'+args.id+'" onClick="handleComposerCellClick(event)"></td>');
         }
       }
       table += ('<tr>'+row+'</tr>');
     }
+    table += '</tbody>';
 
     return ('<table class=' + (display ? 'composer-table-display' : 'composer-table') +'>' + table + '</table>');
   }
@@ -124,7 +154,8 @@ function renderComposer(args, display) {
   else {
     var composer = getTemplate('template-composer')
       .replace('##table##', renderTable())
-      .replace(/##composerid##/g, args.id);
+      .replace(/##composerid##/g, args.id)
+      .replace('##instrument##', args.instrument);
   }
 
   return composer;
@@ -135,30 +166,39 @@ function renderComposers(composersToRender, display) {
   var composers = "";
   var divider = '<hr class="hr-composer">';
 
+  var i = 0;
   for (var composer of composersToRender) {
     if (!composer.notes) {
       composer.notes = getComposerNotes(composer);
     }
-    composers += (composer.id > 0 ? divider : '') + renderComposer(composer, display);
+    composers += (i > 0 && !display ? divider : '') + renderComposer(composer, display);
+    i++;
   }
 
   return composers;
 }
 
 function renderNewPostModule() {
-  var newPostModule = document.getElementById('template-new-post-module').innerHTML;
+  if (!MUSICAPPSTATE.activeModules['newpost']) {return;}
+  var newPostModule = document.getElementById('template-new-post-module').innerHTML
+    .replace('##measures##', MUSICAPPSTATE.newPost.measures)
+    .replace('##BPM##', MUSICAPPSTATE.newPost.BPM);
 
   document.getElementById('new-post').innerHTML = newPostModule;
   document.getElementById('new-post-composers').innerHTML = renderComposers(MUSICAPPSTATE.newPost.composers);
 
   for (var composer of MUSICAPPSTATE.newPost.composers) {
     document.forms['composer-'+composer.id][composer.octave].checked = true;
+    for (var synth of Object.keys(MUSICAPPSTATE.synths)) {
+      document.getElementById('instrument-'+composer.id).innerHTML += ('<li><a data-composerid="'+composer.id+'" data-value="'+synth+'" class="dropdown-item" onclick="handleComposerInstrumentChange(event)">'+synth+'</a></li>');
+    }
+
     document.getElementById('instrument-'+composer.id).value = composer.instrument;
   }
 }
 
 function addNewPostComposer() {
-  MUSICAPPSTATE.newPost.composers.push({id: MUSICAPPSTATE.newPost.composers.length, notes: {}, instrument: 'guitar'});
+  MUSICAPPSTATE.newPost.composers.push({id: MUSICAPPSTATE.newPost.composers.length, notes: {}, instrument: 'piano', octave: 3, measures: MUSICAPPSTATE.newPost.measures});
   renderNewPostModule();
 }
 
@@ -167,22 +207,43 @@ function removeNewPostComposer() {
   renderNewPostModule();
 }
 
+function handleBPMChange(event) {
+  MUSICAPPSTATE.newPost.BPM = parseInt(event.target.value);
+  renderNewPostModule();
+}
+
+function handleMeasuresChange(event) {
+  for (var composer of MUSICAPPSTATE.newPost.composers) {
+    composer.measures = parseInt(event.target.value);
+  }
+  MUSICAPPSTATE.newPost.measures = parseInt(event.target.value);
+  renderNewPostModule();
+}
+
 function handleComposerCellClick(event) {
+  var notes = MUSICAPPSTATE.newPost.composers[parseInt(event.target.dataset.composerid)].notes;
   if (!event.target.classList.contains('active-cell')) {
-    MUSICAPPSTATE.newPost.composers[parseInt(event.target.dataset.composerid)].notes[event.target.dataset.index] = true;
-    event.target.classList.add('active-cell');
-    // this.play();
+    notes[event.target.dataset.index] = 1;
+    event.target.className = 'active-cell q-1'
   }
   else {
-    delete MUSICAPPSTATE.newPost.composers[event.target.dataset.composerid].notes[event.target.dataset.index];
-    event.target.classList.remove('active-cell');
+    if (MUSICAPPSTATE.newPost.composers[event.target.dataset.composerid].notes[event.target.dataset.index] < 4) {
+      notes[event.target.dataset.index]++;
+      event.target.className = 'active-cell q-' + notes[event.target.dataset.index];
+    }
+    else {
+      delete notes[event.target.dataset.index];
+      event.target.innerHTML = '';
+      event.target.className = '';
+    }
   }
   getComposerEvents(event.target.dataset.composerid);
 }
 
 function handleComposerInstrumentChange(event) {
-  MUSICAPPSTATE.newPost.composers[parseInt(event.target.dataset.composerid)].instrument = event.target.value;
+  MUSICAPPSTATE.newPost.composers[parseInt(event.target.dataset.composerid)].instrument = event.target.dataset.value;
   getComposerEvents(event.target.dataset.composerid);
+  renderNewPostModule();
 }
 
 function handleComposerOctaveChange(event) {
@@ -195,9 +256,12 @@ function getComposerEvents(composerid) {
   for (var note of Object.keys(MUSICAPPSTATE.newPost.composers[composerid].notes)) {
     var n =  NOTES[note.split(',')[0]];
     var t = note.split(',')[1];
-    events.push([Math.floor(t/4) + ':' + t%4, n + MUSICAPPSTATE.newPost.composers[composerid].octave])
+    events.push({
+      time: Math.floor(t/4) + ':' + t%4,
+      note: n + MUSICAPPSTATE.newPost.composers[composerid].octave,
+      length: Math.floor(4/MUSICAPPSTATE.newPost.composers[composerid].notes[note]) + 'n'
+    });
   }
-  console.log(events);
   MUSICAPPSTATE.newPost.composers[composerid].events = events;
   // this.props.handleChange({n: this.props.n, octave: this.state.octave, events: events, instrument: this.state.instrument});
 
@@ -209,7 +273,7 @@ function getComposerNotes(composer) {
 
   for (var event of composer.events) {
     var t = event[0].split(':');
-    notes[NOTES.indexOf(event[1].slice(0, -1))+','+(parseInt(t[0])*4 + parseInt(t[1]))] = true;
+    notes[NOTES.indexOf(event[1].slice(0, -1))+','+(parseInt(t[0])*4 + parseInt(t[1]))] = parseInt(event[length].slice(0, 1));
   }
 
   return notes;
@@ -219,10 +283,12 @@ function handleNewPostSubmit() {
   var post = {
     author: sessionStorage.getItem('username'),
     tracks: MUSICAPPSTATE.newPost.composers,
+    measures: MUSICAPPSTATE.newPost.measures,
+    BPM: MUSICAPPSTATE.newPost.BPM
   }
 
-  window.fetch('/posts', {method: 'POST', body: JSON.stringify({post: post}), headers:{'Content-Type': 'application/json'}});
-  loadPosts();
+  window.fetch('/post', {method: 'POST', body: JSON.stringify({post: post, access_token: sessionStorage.getItem('access_token')}), headers:{'Content-Type': 'application/json'}})
+    .then(()=>loadPosts());
 }
 
 function renderPost(post, id) {
@@ -243,8 +309,10 @@ function renderPosts() {
   document.getElementById('posts').innerHTML = posts;
 }
 
-function getSamplers() {
-  for (var instrument of INSTRUMENTS) {
+function getSamplers(instruments) {
+  MUSICAPPSTATE.toload = instruments.length;
+
+  for (var instrument of instruments) {
     if (!MUSICAPPSTATE.samplers.hasOwnProperty(instrument)) {
       var samples = {};
       if (!['drum', 'clap', 'snare'].includes(instrument)) {
@@ -257,10 +325,26 @@ function getSamplers() {
       else {
         samples['C1'] = 'samples/' + instrument + '/sample.wav';
       }
-      MUSICAPPSTATE.samplers[instrument] = new Tone.Sampler(Object.assign({}, samples)).toMaster();
+      MUSICAPPSTATE.samplers[instrument] = new Tone.Sampler(Object.assign({}, samples), function() {
+        MUSICAPPSTATE.toload--;
+        if (MUSICAPPSTATE.toload < 1) {
+          Tone.Transport.start();
+        }
+      }).toMaster();
 
     }
   }
+}
+
+function getSynths() {
+  window.fetch('synths')
+  .then(res => res.json())
+  .then(res => {
+    for (var synth of res) {
+      MUSICAPPSTATE.synths[synth.name] = new Tone[synth.type](synth.properties).toMaster();
+    }
+    renderNewPostModule();
+  });
 }
 
 function play(event, newpost) {
@@ -273,20 +357,22 @@ function play(event, newpost) {
   else {
     var id = parseInt(event.target.id.replace('post-', ''));
     var post = MUSICAPPSTATE.posts[id];
-    var styletemplate = '#post-' + id + ' td:nth-child(##n##) {border-right: solid red !important}';
+    var styletemplate = '#post-' + id + ' tbody td:nth-child(##n##) {border-right: solid red !important}';
   }
   var style = document.createElement('style');
   style.setAttribute('id', 'play-indicator');
   document.getElementsByTagName('body')[0].appendChild(style);
+
+  MUSICAPPSTATE.measures = post.measures || 4;
+
 
   Tone.Transport.cancel();
   var synth = new Tone.Synth().toMaster()
   synth.triggerAttackRelease('C4', 0)
 
   Tone.Transport.scheduleRepeat((time)=> {
-    // console.log(this.state.current);
-    // this.setState({current: (this.state.current+1)%16});
-    current = (current+1) % 16;
+    console.log(current);
+    current = (current+1) % (MUSICAPPSTATE.measures * 4);
     style.innerHTML = styletemplate.replace('##n##', current+(newpost ? 1 : 0));
   }, '4n');
 
@@ -299,22 +385,38 @@ function play(event, newpost) {
 
   var synths = [];
   var parts = [];
+  var instruments = {};
   for (var i = 0; i < (post.tracks||post.composers).length; i++){
-
+    if (!MUSICAPPSTATE.synths.hasOwnProperty((post.tracks||post.composers)[i].instrument) &&
+      !MUSICAPPSTATE.samplers.hasOwnProperty((post.tracks||post.composers)[i].instrument)) {
+      instruments[(post.tracks||post.composers)[i].instrument] = true;
+    }
     ((instr)=>{
-      console.log('he');
-      var part = new Tone.Part((time, note)=>{
-        MUSICAPPSTATE.samplers[instr].triggerAttackRelease(note, "4n", time);
+      var part = new Tone.Part((time, value)=>{
+        if (MUSICAPPSTATE.synths.hasOwnProperty(instr)) {
+          MUSICAPPSTATE.synths[instr].triggerAttackRelease(value.note, "4n", time);
+        }
+        else {
+          MUSICAPPSTATE.samplers[instr].triggerAttackRelease(value.note, value.length, time);
+        }
       }, (post.tracks||post.composers)[i].events);
 
       part.loop = true;
-      part.loopEnd = "4m";
+      part.loopEnd = (post.measures||4) + 'm';
       part.start();
     } )((post.tracks||post.composers)[i].instrument);
   };
 
-  Tone.Transport.bpm.value = 200;
-  Tone.Transport.start();
+  console.log(parts);
+
+  Tone.Transport.bpm.value = post.BPM || 200;
+
+  if (Object.keys(instruments).length > 0) {
+    getSamplers(Object.keys(instruments));
+  }
+  else {
+    Tone.Transport.start();
+  }
 }
 
 function stop() {
@@ -328,7 +430,6 @@ function loadPosts() {
     .then(res => res.json())
     .then(
       result => {
-        console.log(result);
         MUSICAPPSTATE.posts = result.posts;
       }
     )
