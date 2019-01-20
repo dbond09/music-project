@@ -98,6 +98,10 @@ button {
 	background-color: #36622b;
 }
 
+.btn-info:hover {
+	background-color: #36971e;
+}
+
 #drag-1, #drag-2 {
   width: 25px;
   height: 15px;
@@ -145,6 +149,10 @@ button {
   background-color: #474747;
   border: 1px solid black;
   /* margin-bottom: 10px; */
+}
+
+.composer-table-display:last-of-type {
+	margin-bottom: 10px;
 }
 
 .composer-table-display td {

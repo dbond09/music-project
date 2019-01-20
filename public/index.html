@@ -81,14 +81,16 @@
     <div class="composer-table-container">
       <form name="composer-##composerid##">
         <span>
-        <div class="infobutton leftbutton">Instrument</div>
-        <div class="dropdown btn" style="padding-left:0">
-          <button class="dropdown-toggle btn btn-info rightbutton" type="button" data-toggle="dropdown">##instrument##<span class="caret"></span></button>
-            <ul id="instrument-##composerid##" class="dropdown-menu">
-              <li><a data-composerid="##composerid##" data-value="piano" class="dropdown-item" onclick="handleComposerInstrumentChange(event)">Piano</a></li>
-            </ul>
-        </div>
-        <div class="infobutton leftbutton">Octave</div>
+          <div class="infobutton leftbutton">Instrument</div>
+          <div class="dropdown btn" style="padding-left:0">
+            <button class="dropdown-toggle btn btn-info rightbutton" type="button" data-toggle="dropdown">##instrument##<span class="caret"></span></button>
+              <ul id="instrument-##composerid##" class="dropdown-menu">
+                <li><a data-composerid="##composerid##" data-value="piano" class="dropdown-item" onclick="handleComposerInstrumentChange(event)">Piano</a></li>
+              </ul>
+          </div>
+        </span>
+        <span style="display: block; margin-bottom: 5px">
+          <div class="infobutton leftbutton">Octave</div>
           <input id="octave-##composerid##-1" name="octave-##composerid##" class="octave-button" data-composerid="##composerid##" type="radio" value="1" onChange="handleComposerOctaveChange(event)"></input>
           <label for="octave-##composerid##-1" class="btn btn-info middlebutton">1</label>
           <input id="octave-##composerid##-2" name="octave-##composerid##" class="octave-button" data-composerid="##composerid##" type="radio" value="2" onChange="handleComposerOctaveChange(event)"></input>
@@ -107,10 +109,14 @@
   <script type="text/template" id="template-post">
     <div class="panel panel-info">
       <div class="panel-heading">
-        <div id="##id##" class="media" onMouseEnter="play(event)" onMouseLeave="stop()">
+        <div id="##id##" class="media">
             <h4 class="media-heading">##author##</h4>
           <div class="panel-body">
             ##composers##
+            <button type="button" class="btn btn-info leftbutton" onclick="play(event)"><span class="glyphicon glyphicon-play"></span></button>
+            <button type="button" class="btn btn-danger rightbutton" onclick="stop(event)"><span class="glyphicon glyphicon-stop"></span></button>
+            <button id="like-button-##id##" type="button" class="btn ##btnclass##" onclick="handlePostLike(event)"><span class="glyphicon glyphicon-thumbs-up" style="margin-right: 5px"></span>##likes##</button>
+            <button type="button" class="btn btn-primary" onclick="handlePostCopy(event)"##hidden##>Copy to Editor</button>
           </div>
         </div>
       </div>

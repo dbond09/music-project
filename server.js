@@ -47,7 +47,7 @@ function newAccessToken(user) {
 }
 
 function verifyAccessToken(token, user) {
-  console.log(token, user)
+  console.log(token, user, accessTokens[token])
   if (token === 'concertina') {return true;}
   if (!Object.keys(accessTokens).includes(token)) {return false;}
   if (accessTokens[token].expiry < Date.now()) {return false;}
@@ -65,7 +65,7 @@ app.get('/synths', function(req, res) {
 })
 
 app.get('/posts', function(req, res) {
-  res.send({posts: posts.slice().sort(function(a,b){return b.id-a.id})});
+  res.send({posts: posts});
 });
 
 app.post('/post', function(req, res) {
@@ -116,6 +116,30 @@ app.get('/people', function(req, res) {
 
 app.get('/people/:username', function(req, res) {
   res.send(JSON.stringify(users[req.params.username]));
-})
+});
+
+app.post('/like', function(req, res) {
+  console.log(req.body);
+  data = req.body;
+  if (!verifyAccessToken(data.access_token, data.username)) {
+    res.send(JSON.stringify({success: false}));
+    return;
+  }
+
+  posts[data.postid].likes[data.username] = true;
+  fs.writeFile('posts.json', JSON.stringify(posts), function(err){return;});
+  res.send(JSON.stringify({success: true}));
+});
+
+app.post('/unlike', function(req, res) {
+  data = req.body;
+  if (!verifyAccessToken(data.access_token, data.username)) {return false;}
+
+  if (posts[data.postid].likes[data.username]) {
+    delete posts[data.postid].likes[data.username];
+    fs.writeFile('posts.json', JSON.stringify(posts), function(err){return;});
+    res.send(JSON.stringify({success: true}))
+  }
+});
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));

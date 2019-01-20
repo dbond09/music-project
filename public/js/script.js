@@ -8,7 +8,7 @@ var MUSICAPPSTATE = {
     measures: 4,
     BPM: 200
   },
-  posts: [],
+  posts: {},
   samplers: {},
   synths: {},
   toload: 0,
@@ -164,15 +164,12 @@ function renderComposer(args, display) {
 
 function renderComposers(composersToRender, display) {
   var composers = "";
-  var divider = '<hr class="hr-composer">';
 
-  var i = 0;
   for (var composer of composersToRender) {
     if (!composer.notes) {
       composer.notes = getComposerNotes(composer);
     }
-    composers += (i > 0 && !display ? divider : '') + renderComposer(composer, display);
-    i++;
+    composers += renderComposer(composer, display);
   }
 
   return composers;
@@ -291,20 +288,21 @@ function handleNewPostSubmit() {
     .then(()=>loadPosts());
 }
 
-function renderPost(post, id) {
+function renderPost(post) {
   var composers = renderComposers(post.tracks, true);
   return getTemplate('template-post')
     .replace('##author##', post.author)
     .replace('##composers##', composers)
-    .replace('##id##', 'post-'+id);
+    .replace(/##id##/g, 'post-'+post.id)
+    .replace('##likes##', Object.keys(post.likes).length)
+    .replace('##hidden##', (sessionStorage.getItem('username') ? '' : ' hidden'))
+    .replace('##btnclass##', (sessionStorage.getItem('username') ? (post.likes[sessionStorage.getItem('username')] ? 'btn-info' : 'btn-default') : 'btn-default disabled'));
 }
 
 function renderPosts() {
   var posts = '';
-  var i = 0;
-  for (var post of MUSICAPPSTATE.posts) {
-    posts += renderPost(post, i);
-    i++;
+  for (var key of Object.keys(MUSICAPPSTATE.posts).slice().sort((a,b)=>{return b-a})) {
+    posts += renderPost(MUSICAPPSTATE.posts[key]);
   }
   document.getElementById('posts').innerHTML = posts;
 }
@@ -336,6 +334,64 @@ function getSamplers(instruments) {
   }
 }
 
+function handlePostLike(event) {
+  var postid = parseInt(event.currentTarget.parentElement.parentElement.id.replace('post-', ''));
+  if (event.currentTarget.classList.contains('btn-default')) {
+    window.fetch('/like', {
+      method: 'POST',
+      headers: {
+        "Content-Type": 'application/json'
+      },
+      body: JSON.stringify({
+        'access_token': sessionStorage.getItem('access_token'),
+        'username': sessionStorage.getItem('username'),
+        'postid': postid
+      })
+    })
+    .then(res=>res.json())
+    .then(res=>{
+      if (res.success) {
+        var likebutton = document.getElementById('like-button-post-' + postid);
+        likebutton.classList.remove('btn-default');
+        likebutton.classList.add('btn-info');
+        likebutton.childNodes[1].data++;
+      }
+    });
+  }
+  else {
+    window.fetch('/unlike', {
+      method: 'POST',
+      headers: {
+        "Content-Type": 'application/json'
+      },
+      body: JSON.stringify({
+        'access_token': sessionStorage.getItem('access_token'),
+        'username': sessionStorage.getItem('username'),
+        'postid': postid
+      })
+    })
+    .then(res=>res.json())
+    .then(res=>{
+      if (res.success) {
+        var likebutton = document.getElementById('like-button-post-' + postid);
+        likebutton.classList.remove('btn-info');
+        likebutton.classList.add('btn-default');
+        likebutton.childNodes[1].data--;
+      }
+    });
+  }
+}
+
+function handlePostCopy(event) {
+  var post = MUSICAPPSTATE.posts[parseInt(event.currentTarget.parentElement.parentElement.id.replace('post-', ''))];
+  MUSICAPPSTATE.newPost = {
+    composers: post.tracks.slice(),
+    BPM: post.BPM,
+    measures: post.measures
+  };
+  renderNewPostModule();
+}
+
 function getSynths() {
   window.fetch('synths')
   .then(res => res.json())
@@ -355,7 +411,8 @@ function play(event, newpost) {
     var styletemplate = '.composer-table td:nth-child(##n##) {border-right: solid red !important}';
   }
   else {
-    var id = parseInt(event.target.id.replace('post-', ''));
+    var id = parseInt(event.currentTarget.parentElement.parentElement.id.replace('post-', ''));
+    console.log(id);
     var post = MUSICAPPSTATE.posts[id];
     var styletemplate = '#post-' + id + ' tbody td:nth-child(##n##) {border-right: solid red !important}';
   }
