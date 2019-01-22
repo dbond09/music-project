@@ -47,7 +47,6 @@ function newAccessToken(user) {
 }
 
 function verifyAccessToken(token, user) {
-  console.log(token, user, accessTokens[token])
   if (token === 'concertina') {return true;}
   if (!Object.keys(accessTokens).includes(token)) {return false;}
   if (accessTokens[token].expiry < Date.now()) {return false;}
@@ -58,6 +57,7 @@ function verifyAccessToken(token, user) {
 app.get('/', (req, res)=>{
   res.sendFile('./index.html', {root: path.join(__dirname, './public')});
 });
+
 app.use('/', express.static('public'));
 
 app.get('/synths', function(req, res) {
@@ -69,35 +69,48 @@ app.get('/posts', function(req, res) {
 });
 
 app.post('/post', function(req, res) {
-  if (!verifyAccessToken(req.body.access_token, req.body.post.author)) {return;}
+  if (!verifyAccessToken(req.body.access_token, req.body.post.author)) {
+    res.status(403).send('Invalid access token.');
+    return;
+  }
   var post = req.body.post;
   post.id = Object.keys(posts).length;
+  post.likes = [];
   while (posts.hasOwnProperty(post.id)) {post.id += 1;}
   posts[post.id] = post;
   console.log(post);
-  res.send({success: true})
   fs.writeFile('posts.json', JSON.stringify(posts), function(err){return;});
+  res.status(200).send('OK');
 });
 
 app.post('/verify', function(req, res) {
-  console.log({success: verifyAccessToken(req.body.access_token, req.body.username)});
-  res.send({success: verifyAccessToken(req.body.access_token, req.body.username)});
+  if (!verifyAccessToken(req.body.access_token, req.body.username)) {
+    res.status(403).send('Invalid access token.');
+    return;
+  }
+  res.status(200).send('OK');
 })
 
 app.post('/login', function(req, res) {
   var data = req.body;
-  console.log(req.body);
 
   if (Object.keys(users).includes(data.username) && data.password == passwords[data.username]) {
-    res.send({success: true, access_token: newAccessToken(data.username), username: data.username});
+    res.status(200).json({success: true, access_token: newAccessToken(data.username), username: data.username});
   }
   else {
-    res.send({success: false});
+    res.status(403).json({success: false, error: 'Username or password not found.'});
   }
 });
 
 app.post('/register', function(req, res) {
-  console.log(req.body);
+  if (users[req.body.username]) {
+    res.status(400).json({success: false, error: 'Username is taken'});
+    return;
+  }
+  if (req.body.password.length < 6) {
+    res.status(400).json({success: false, error: 'Your password should be at least 6 characters long.'});
+    return;
+  }
   users[req.body.username] = {
     username: req.body.username,
     forename: req.body.forename,
@@ -105,41 +118,70 @@ app.post('/register', function(req, res) {
   };
   passwords[req.body.username] = req.body.password;
 
-  res.send(JSON.stringify({success: true}))
+  res.status(200).send({success: true});
   fs.writeFile('users.json', JSON.stringify(users), function(err){return;});
   fs.writeFile('passwords.json', JSON.stringify(passwords), function(err){return;});
 })
 
 app.get('/people', function(req, res) {
-  res.send(JSON.stringify(users));
+  res.json(users);
 });
 
 app.get('/people/:username', function(req, res) {
-  res.send(JSON.stringify(users[req.params.username]));
+  if (!users[req.params.username]) {
+    res.status(400).send('User not found');
+    return;
+  }
+  res.json(users[req.params.username]);
+});
+
+app.post('/people', function(req, res) {
+  if (req.headers.access_token != 'concertina') {
+    res.status(403).send('Invalid access token');
+    return;
+  }
+  if (users[req.headers.username]) {
+    res.status(400).send('Username taken.');
+    return;
+  }
+  users[req.headers.username] = {
+    username: req.headers.username,
+    forename: req.headers.forename,
+    surname: req.headers.surname
+  };
+  res.status(200).send('OK');
 });
 
 app.post('/like', function(req, res) {
   console.log(req.body);
   data = req.body;
   if (!verifyAccessToken(data.access_token, data.username)) {
-    res.send(JSON.stringify({success: false}));
+    res.status(403).send('Invalid access token.');
     return;
   }
 
   posts[data.postid].likes[data.username] = true;
   fs.writeFile('posts.json', JSON.stringify(posts), function(err){return;});
-  res.send(JSON.stringify({success: true}));
+  res.status(200).send('OK');
 });
 
 app.post('/unlike', function(req, res) {
   data = req.body;
-  if (!verifyAccessToken(data.access_token, data.username)) {return false;}
+  if (!verifyAccessToken(data.access_token, data.username)) {
+    res.status(403).send('Invalid access token.');
+    return;
+  }
 
   if (posts[data.postid].likes[data.username]) {
     delete posts[data.postid].likes[data.username];
     fs.writeFile('posts.json', JSON.stringify(posts), function(err){return;});
-    res.send(JSON.stringify({success: true}))
+    res.status(200).send('OK');
+  }
+  else {
+    res.status(400).send('Not liked.');
   }
 });
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+
+module.exports = app;

@@ -47,7 +47,7 @@ background-color: #1f2328;
 }
 
 div.panel-heading{
-	padding-top:15px;
+	padding-top:3px;
 	padding-bottom: 0px;
 }
 .form-control-feedback{
@@ -271,6 +271,15 @@ button {
 	width: 70px;
 	border-radius: 0 4px 4px 0;
 	display: inline-block;
+	height: 31px;
+	margin-bottom: 0;
+	vertical-align: middle;
+}
+
+.title-input {
+	border-radius: 0 4px 4px 0;
+	display: inline-block;
+	width: 200px;
 	height: 31px;
 	margin-bottom: 0;
 	vertical-align: middle;

@@ -60,6 +60,7 @@
         <div class="media">
           <div class="media-body">
             <div class="form-group">
+              <div style="margin-bottom: 10px"><span><div class="infobutton leftbutton">Title</div><input id="new-post-title" class="form-control title-input" type="text"></input></span></div>
               <div id="new-post-composers">
               </div>
               <span style="margin-right: 5px"><div class="infobutton leftbutton">BPM</div><input class="form-control num-input" size="3" type="number" value="##BPM##" onchange="handleBPMChange(event)"></input></span>
@@ -86,6 +87,8 @@
             <button class="dropdown-toggle btn btn-info rightbutton" type="button" data-toggle="dropdown">##instrument##<span class="caret"></span></button>
               <ul id="instrument-##composerid##" class="dropdown-menu">
                 <li><a data-composerid="##composerid##" data-value="piano" class="dropdown-item" onclick="handleComposerInstrumentChange(event)">Piano</a></li>
+                <li><a data-composerid="##composerid##" data-value="guitar" class="dropdown-item" onclick="handleComposerInstrumentChange(event)">Guitar</a></li>
+                <li><a data-composerid="##composerid##" data-value="snare" class="dropdown-item" onclick="handleComposerInstrumentChange(event)">Snare</a></li>
               </ul>
           </div>
         </span>
@@ -107,18 +110,17 @@
     </div>
   </script>
   <script type="text/template" id="template-post">
-    <div class="panel panel-info">
-      <div class="panel-heading">
-        <div id="##id##" class="media">
-            <h4 class="media-heading">##author##</h4>
-          <div class="panel-body">
-            ##composers##
-            <button type="button" class="btn btn-info leftbutton" onclick="play(event)"><span class="glyphicon glyphicon-play"></span></button>
-            <button type="button" class="btn btn-danger rightbutton" onclick="stop(event)"><span class="glyphicon glyphicon-stop"></span></button>
-            <button id="like-button-##id##" type="button" class="btn ##btnclass##" onclick="handlePostLike(event)"><span class="glyphicon glyphicon-thumbs-up" style="margin-right: 5px"></span>##likes##</button>
-            <button type="button" class="btn btn-primary" onclick="handlePostCopy(event)"##hidden##>Copy to Editor</button>
-          </div>
+    <div id="##id##" class="panel panel-info">
+        <div class="panel-heading">
+            <h4>##author##</h4>
         </div>
+        <div class="panel-body">
+          <p>##title##</p>
+          ##composers##
+          <button type="button" class="btn btn-info leftbutton" onclick="play(event)"><span class="glyphicon glyphicon-play"></span></button>
+          <button type="button" class="btn btn-danger rightbutton" onclick="stop(event)"><span class="glyphicon glyphicon-stop"></span></button>
+          <button id="like-button-##id##" type="button" class="btn ##btnclass##" onclick="handlePostLike(event)"><span class="glyphicon glyphicon-thumbs-up" style="margin-right: 5px"></span>##likes##</button>
+          <button type="button" class="btn btn-primary" onclick="handlePostCopy(event)"##hidden##>Copy to Editor</button>
       </div>
     </div>
   </script>

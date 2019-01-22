@@ -49,9 +49,8 @@ function verifyAccessToken() {
       'username': sessionStorage.getItem('username')
     })
   })
-  .then(function(res) {return res.json()})
   .then(function(res) {
-    if (res.success !== true) {
+    if (!res.ok) {
       handleLogout();
     }
   })
@@ -70,18 +69,18 @@ function handleLogin(event) {
     })
   })
   .then(function (res) {
-    return res.json();
+    return res.json()
   })
-  .then(function (resjson) {
-    if (resjson.success) {
-      sessionStorage.setItem('username', resjson['username']);
-      sessionStorage.setItem('access_token', resjson['access_token']);
+  .then(function (res) {
+    if (res.success) {
+      sessionStorage.setItem('username', res['username']);
+      sessionStorage.setItem('access_token', res['access_token']);
       location.reload();
     }
     else {
-      window.alert('Username or password incorrect.');
+      window.alert(res.error);
     }
-  });
+  })
 
   return false;
 }
@@ -109,8 +108,13 @@ function handleRegister(event) {
       return res.json()
     })
     .then(function (resjson) {
-      window.alert('success');
-      location.reload();
+      if (resjson.success) {
+        window.alert('You can now log in.');
+        location.reload();
+      }
+      else {
+        window.alert(resjson.error);
+      }
     });
 
   return false;
@@ -218,6 +222,7 @@ function handleMeasuresChange(event) {
 }
 
 function handleComposerCellClick(event) {
+  if (window.getComputedStyle(event.target).getPropertyValue('background-color') == 'rgb(102, 179, 255)') {return;}
   var notes = MUSICAPPSTATE.newPost.composers[parseInt(event.target.dataset.composerid)].notes;
   if (!event.target.classList.contains('active-cell')) {
     notes[event.target.dataset.index] = 1;
@@ -279,6 +284,7 @@ function getComposerNotes(composer) {
 function handleNewPostSubmit() {
   var post = {
     author: sessionStorage.getItem('username'),
+    title: document.getElementById('new-post-title').value,
     tracks: MUSICAPPSTATE.newPost.composers,
     measures: MUSICAPPSTATE.newPost.measures,
     BPM: MUSICAPPSTATE.newPost.BPM
@@ -296,7 +302,8 @@ function renderPost(post) {
     .replace(/##id##/g, 'post-'+post.id)
     .replace('##likes##', Object.keys(post.likes).length)
     .replace('##hidden##', (sessionStorage.getItem('username') ? '' : ' hidden'))
-    .replace('##btnclass##', (sessionStorage.getItem('username') ? (post.likes[sessionStorage.getItem('username')] ? 'btn-info' : 'btn-default') : 'btn-default disabled'));
+    .replace('##btnclass##', (sessionStorage.getItem('username') ? (post.likes[sessionStorage.getItem('username')] ? 'btn-info' : 'btn-default') : 'btn-default disabled'))
+    .replace('##title##', post.title);
 }
 
 function renderPosts() {
@@ -348,9 +355,8 @@ function handlePostLike(event) {
         'postid': postid
       })
     })
-    .then(res=>res.json())
     .then(res=>{
-      if (res.success) {
+      if (res.ok) {
         var likebutton = document.getElementById('like-button-post-' + postid);
         likebutton.classList.remove('btn-default');
         likebutton.classList.add('btn-info');
@@ -370,9 +376,8 @@ function handlePostLike(event) {
         'postid': postid
       })
     })
-    .then(res=>res.json())
     .then(res=>{
-      if (res.success) {
+      if (res.ok) {
         var likebutton = document.getElementById('like-button-post-' + postid);
         likebutton.classList.remove('btn-info');
         likebutton.classList.add('btn-default');
@@ -404,6 +409,7 @@ function getSynths() {
 }
 
 function play(event, newpost) {
+  stop();
   var current = -1;
 
   if (newpost) {
@@ -417,7 +423,7 @@ function play(event, newpost) {
     var styletemplate = '#post-' + id + ' tbody td:nth-child(##n##) {border-right: solid red !important}';
   }
   var style = document.createElement('style');
-  style.setAttribute('id', 'play-indicator');
+  style.setAttribute('class', 'play-indicator');
   document.getElementsByTagName('body')[0].appendChild(style);
 
   MUSICAPPSTATE.measures = post.measures || 4;
@@ -433,12 +439,12 @@ function play(event, newpost) {
     style.innerHTML = styletemplate.replace('##n##', current+(newpost ? 1 : 0));
   }, '4n');
 
-  var chord = new Tone.Event(function(time, chord){
-  }, ["D4", "E4", "F4"]);
-  chord.start();
-  //loop it every measure for 8 measures
-  chord.loop = 8;
-  chord.loopEnd = "1m";
+  // var chord = new Tone.Event(function(time, chord){
+  // }, ["D4", "E4", "F4"]);
+  // chord.start();
+  // //loop it every measure for 8 measures
+  // chord.loop = 8;
+  // chord.loopEnd = "1m";
 
   var synths = [];
   var parts = [];
@@ -451,7 +457,7 @@ function play(event, newpost) {
     ((instr)=>{
       var part = new Tone.Part((time, value)=>{
         if (MUSICAPPSTATE.synths.hasOwnProperty(instr)) {
-          MUSICAPPSTATE.synths[instr].triggerAttackRelease(value.note, "4n", time);
+          MUSICAPPSTATE.synths[instr].triggerAttackRelease(value.note, value.length, time);
         }
         else {
           MUSICAPPSTATE.samplers[instr].triggerAttackRelease(value.note, value.length, time);
@@ -478,8 +484,11 @@ function play(event, newpost) {
 
 function stop() {
   Tone.Transport.cancel();
-  var indicator = document.getElementById('play-indicator');
-  indicator.parentNode.removeChild(indicator);
+  var indicator = document.getElementsByClassName('play-indicator');
+  while (indicator[0]) {
+    indicator[0].parentNode.removeChild(indicator[0]);
+    indicator = document.getElementsByClassName('play-indicator');
+  }
 }
 
 function loadPosts() {
