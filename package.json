@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --ignore '*.json' app.js"
+    "test": "jest --forceExit app.test.js",
+    "start": "node app.js"
   },
   "author": "",
   "license": "ISC",

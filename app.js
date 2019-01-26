@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
 const app = express();
-const port = 80;
+const port = 3000;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -136,18 +136,18 @@ app.get('/people/:username', function(req, res) {
 });
 
 app.post('/people', function(req, res) {
-  if (req.headers.access_token != 'concertina') {
+  if (req.body.access_token != 'concertina') {
     res.status(403).send('Invalid access token');
     return;
   }
-  if (users[req.headers.username]) {
+  if (users[req.body.username]) {
     res.status(400).send('Username taken.');
     return;
   }
-  users[req.headers.username] = {
-    username: req.headers.username,
-    forename: req.headers.forename,
-    surname: req.headers.surname
+  users[req.body.username] = {
+    username: req.body.username,
+    forename: req.body.forename,
+    surname: req.body.surname
   };
   res.status(200).send('OK');
 });
@@ -182,6 +182,6 @@ app.post('/unlike', function(req, res) {
   }
 });
 
-app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+app.listen(port, () => console.log(`Riffster app listening on port ${port}!`));
 
 module.exports = app;

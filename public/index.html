@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Web Programming Project To Be Named</title>
+  <title>Riffster.xyz</title>
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -23,8 +23,17 @@
   <![endif]-->
   <div>
   <div class="navbar navbar-default navbar-static-top">
+    <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Riffster.xyz</a>
+        </div>
     <div class="container">
-      <div class="navbar-collapse navbar-collapse-1 collapse" aria-expanded="true">
+      <div class="navbar-collapse navbar-collapse-1 collapse" role="menubar" aria-expanded="true" id="navbar">
         <ul class="nav navbar-nav">
           <li class="active">
             <a href="#" onclick="loadHome()"><span class="glyphicon glyphicon-home"></span> Home</a>
@@ -33,19 +42,16 @@
             <a href="#" onclick="loadPeoplePage()"><span class="glyphicon glyphicon-user"></span> People</a>
           </li>
         </ul>
-          <div class="navbar-form navbar-right">
-
-          </div>
       </div>
     </div>
   </div>
   <div class="container">
     <div class="row">
       <div class="col-sm-3">
-        <div class="panel panel-default panel-custom" id="left-panel">
+        <div class="panel panel-info" id="left-panel">
         </div>
       </div>
-      <div class="col-sm-6" div id="middle-column">
+      <div class="col-sm-6" id="middle-column">
       </div>
     </div>
   </div>
@@ -60,11 +66,11 @@
         <div class="media">
           <div class="media-body">
             <div class="form-group">
-              <div style="margin-bottom: 10px"><span><div class="infobutton leftbutton">Title</div><input id="new-post-title" class="form-control title-input" type="text"></input></span></div>
+              <div style="margin-bottom: 10px"><div class="infobutton leftbutton">Title</div><input id="new-post-title" class="form-control title-input" type="text"></input></div>
               <div id="new-post-composers">
               </div>
-              <span style="margin-right: 5px"><div class="infobutton leftbutton">BPM</div><input class="form-control num-input" size="3" type="number" value="##BPM##" onchange="handleBPMChange(event)"></input></span>
-              <span><div class="infobutton leftbutton">Measures</div><input class="form-control num-input" size="3" type="number" value="##measures##" onchange="handleMeasuresChange(event)"></input></span>
+              <div style="margin-right: 5px"><div class="infobutton leftbutton">BPM</div><input class="form-control num-input" size="3" type="number" value="##BPM##" onchange="handleBPMChange(event)"></input>
+              <div class="infobutton leftbutton">Measures</div><input class="form-control num-input" size="3" type="number" value="##measures##" onchange="handleMeasuresChange(event)"></input></div>
               <div style="margin-top: 5px">
                 <button type="button" class="btn btn-primary" onClick="handleNewPostSubmit()">Post</button>
                 <button type="button" class="btn btn-info leftbutton" onClick="play(event, true)"><span class="glyphicon glyphicon-play"></span></button>
@@ -81,7 +87,6 @@
   <script type="text/template" id="template-composer">
     <div class="composer-table-container">
       <form name="composer-##composerid##">
-        <span>
           <div class="infobutton leftbutton">Instrument</div>
           <div class="dropdown btn" style="padding-left:0">
             <button class="dropdown-toggle btn btn-info rightbutton" type="button" data-toggle="dropdown">##instrument##<span class="caret"></span></button>
@@ -91,8 +96,7 @@
                 <li><a data-composerid="##composerid##" data-value="snare" class="dropdown-item" onclick="handleComposerInstrumentChange(event)">Snare</a></li>
               </ul>
           </div>
-        </span>
-        <span style="display: block; margin-bottom: 5px">
+        <div style="display: block; margin-bottom: 5px">
           <div class="infobutton leftbutton">Octave</div>
           <input id="octave-##composerid##-1" name="octave-##composerid##" class="octave-button" data-composerid="##composerid##" type="radio" value="1" onChange="handleComposerOctaveChange(event)"></input>
           <label for="octave-##composerid##-1" class="btn btn-info middlebutton">1</label>
@@ -104,7 +108,7 @@
           <label for="octave-##composerid##-4" class="btn btn-info middlebutton">4</label>
           <input id="octave-##composerid##-5" name="octave-##composerid##" class="octave-button" data-composerid="##composerid##" type="radio" value="5" onChange="handleComposerOctaveChange(event)"></input>
           <label for="octave-##composerid##-5" class="btn btn-info rightbutton">5</label>
-        </span>
+        </div>
       </form>
       ##table##
     </div>
@@ -126,9 +130,7 @@
   </script>
   <script type="text/template" id="login-form">
     <div class="panel-heading">
-      <h3 class="panel-title">
-        Login
-      </h3>
+      <h4>Login</h4>
     </div>
     <div class="panel-body" id="left-panel">
       <form onSubmit="{handleLogin(event); return false;}" action="/login" method="post" id="loginForm">
@@ -146,9 +148,7 @@
   </script>
   <script type="text/template" id="user-panel">
     <div class="panel-heading">
-      <h3 class="panel-title">
-        Logged In
-      </h3>
+      <h4>Logged In</h4>
     </div>
     <div class="panel-body">
       <p>User: ##user##</p>

@@ -402,7 +402,9 @@ function getSynths() {
   .then(res => res.json())
   .then(res => {
     for (var synth of res) {
-      MUSICAPPSTATE.synths[synth.name] = new Tone[synth.type](synth.properties).toMaster();
+      // MUSICAPPSTATE.synths[synth.name] = new Tone[synth.type](synth.properties).toMaster();
+      MUSICAPPSTATE.synths[synth.name] = new Tone.PolySynth(3, Tone[synth.type]).toMaster();
+      MUSICAPPSTATE.synths[synth.name].set(synth.properties);
     }
     renderNewPostModule();
   });
@@ -507,7 +509,7 @@ function loadPeoplePage() {
     .then((res)=>res.json())
     .then(function (res) {
       var table = document.createElement('table');
-      table.setAttribute('class', 'table');
+      table.setAttribute('class', 'table people-table');
       var thead = document.createElement('thead');
       thead.innerHTML = '<tr><th>Username</th><th>Forename</th><th>Surname</th></tr>';
       table.appendChild(thead);

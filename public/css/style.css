@@ -2,6 +2,10 @@
 	margin-top: 0;
 }
 
+.navbar-default {
+	border-color: black;
+}
+
 .nav-pills-custom>li>a {
 	color: white;
 }
@@ -245,7 +249,6 @@ button {
   background-color: #454545;
   color: white;
   border-radius: 4px;
-  .transition;
 }
 
 .dropdown-menu {
@@ -283,4 +286,9 @@ button {
 	height: 31px;
 	margin-bottom: 0;
 	vertical-align: middle;
+}
+
+.people-table {
+	background-color: black;
+	border-radius: 7px;
 }

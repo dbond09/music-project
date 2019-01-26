@@ -1,1 +1,7 @@
-{"admin":{"username":"admin","forename":"Ad","surname":"Min"},"doctorwhocomposer":{"username":"doctorwhocomposer","forename":"Delia","surname":"Derbyshire"},"jkovacs":{"username":"jkovacs","forename":"Jozsi","surname":"Kovacs"},"admin1":{"username":"admin1","forename":"1234","surname":"1234"}}
+{
+  "doctorwhocomposer": {
+    "username": "doctorwhocomposer",
+    "forename": "Delia",
+    "surname": "Derbyshire"
+  }
+}
