@@ -138,7 +138,6 @@ function renderComposer(args, display) {
       }
       for (var j = 0; j < beats*4; j++) {
         if (display) {
-          console.log(args.notes[i+','+j]);
           row += ('<td class="' + (args.notes[i+','+j] ? 'active-cell q-' + args.notes[i+','+j] : '') + '" data-index="'+i+','+j+'"></td>');
         }
         else {
@@ -420,7 +419,6 @@ function play(event, newpost) {
   }
   else {
     var id = parseInt(event.currentTarget.parentElement.parentElement.id.replace('post-', ''));
-    console.log(id);
     var post = MUSICAPPSTATE.posts[id];
     var styletemplate = '#post-' + id + ' tbody td:nth-child(##n##) {border-right: solid red !important}';
   }
@@ -436,7 +434,6 @@ function play(event, newpost) {
   synth.triggerAttackRelease('C4', 0)
 
   Tone.Transport.scheduleRepeat((time)=> {
-    console.log(current);
     current = (current+1) % (MUSICAPPSTATE.measures * 4);
     style.innerHTML = styletemplate.replace('##n##', current+(newpost ? 1 : 0));
   }, '4n');
@@ -471,8 +468,6 @@ function play(event, newpost) {
       part.start();
     } )((post.tracks||post.composers)[i].instrument);
   };
-
-  console.log(parts);
 
   Tone.Transport.bpm.value = post.BPM || 200;
 
