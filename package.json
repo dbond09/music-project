@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest --forceExit app.test.js",
-    "start": "node app.js"
+    "start": "node index.js"
   },
   "author": "",
   "license": "ISC",
