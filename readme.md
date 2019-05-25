@@ -10,13 +10,14 @@ npm install
 npm start
 ```
 
-URL: http://localhost:3000/
-default credentials:
-  doctorwhocomposer
-  password
-Works best in Google Chrome
+URL: http://localhost:3000/  
+default credentials:  
+  doctorwhocomposer  
+  password  
+  
+Works best in Google Chrome  
 
-Run tests:
+Run tests:  
 ```sh
 npm test
 ```
